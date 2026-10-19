@@ -18,6 +18,15 @@ npm run dev        # http://localhost:5173/
 
 同じネットワークのスマホから確認する場合は、`npm run dev` 実行時に表示される `Network:` のURLを開いてください。
 
+### GitHub Pages での公開
+
+`main` ブランチへプッシュすると、GitHub Actions（`.github/workflows/deploy.yml`）でビルドされ、以下に公開されます。
+
+https://yig-yamasaki.github.io/rastaq-matching/
+
+- 初回のみ、リポジトリの **Settings → Pages → Build and deployment → Source** を「**GitHub Actions**」に設定してください。
+- 公開URLはログイン不要で誰でも閲覧できます（データは閲覧者ごとのブラウザに保存され、他の人には共有されません）。
+
 ## 画面構成
 
 画面上部の **デモ切替バー** で以下を行き来できます（ログイン認証なし）。
