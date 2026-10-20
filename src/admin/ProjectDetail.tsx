@@ -15,7 +15,7 @@ import {
   ProjectStatusBadge,
 } from '../components/ui';
 import { levelDef } from '../data/master';
-import { applicantRate, appsOf, byDistance, distanceTarget, fmtAreas, fmtDateTime, fmtFull, fmtRange, matchPartner, remaining, yen } from '../lib';
+import { applicantRate, appsOf, byDistance, distanceTarget, fmtAreas, fmtDateTime, fmtDeadline, fmtFull, fmtRange, matchPartner, remaining, yen } from '../lib';
 import { useStore } from '../store/AppStore';
 import type { Application, Partner, ProjectStatus } from '../types';
 import { PageHeader } from './AdminLayout';
@@ -142,7 +142,7 @@ export function ProjectDetail() {
       tone: r.passed ? 'warning' : 'info',
       text: r.passed
         ? '回答締め切りを過ぎています。「応募を締め切る」を押して選定に進んでください。'
-        : `応募受付中です（${r.text}）。締め切り後に、集まった応募者の中から選定します。先着順での自動決定は行いません。`,
+        : `応募受付中です${r.invalid ? '' : `（${r.text}）`}。締め切り後に、集まった応募者の中から選定します。先着順での自動決定は行いません。`,
     },
     応募締め切り: { tone: 'warning', text: '応募を締め切りました。「選定を開始する」を押し、応募者を比較して決定する業者を選んでください。' },
     選定中: { tone: 'warning', text: '選定中です。決定する業者にチェックを入れ、「選定結果を確定して通知」を押してください。チェックしなかった業者は「見送り」になります。' },
@@ -200,7 +200,7 @@ export function ProjectDetail() {
         </div>
         <div className="kpi">
           <span>回答締め切り</span>
-          <strong>{fmtDateTime(project.deadline)}</strong>
+          <strong>{fmtDeadline(project.deadline)}</strong>
         </div>
       </div>
 
@@ -389,7 +389,7 @@ export function ProjectDetail() {
             <InfoRow label="集合場所・時刻">{project.meetingPlace}</InfoRow>
             <InfoRow label="距離の計算">協力業者の住所 → {target.label}（直線距離・参考）</InfoRow>
             <InfoRow label="交通費">実費支給</InfoRow>
-            <InfoRow label="回答締め切り">{fmtFull(project.deadline)}</InfoRow>
+            <InfoRow label="回答締め切り">{fmtDeadline(project.deadline, fmtFull)}</InfoRow>
             <InfoRow label="単価">
               {project.customRate !== null ? (
                 <>

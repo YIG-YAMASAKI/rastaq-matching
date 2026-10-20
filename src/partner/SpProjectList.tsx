@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AppStatusBadge, EmptyState, LevelBadge } from '../components/ui';
-import { findApp, fmtDateTime, fmtRange, partnerViewStatus, remaining } from '../lib';
+import { findApp, fmtDeadline, fmtRange, partnerViewStatus, remaining } from '../lib';
 import { useCurrentPartner, useStore } from '../store/AppStore';
 import type { PartnerViewStatus, Project } from '../types';
 import { useVisibleProjects } from './SpLayout';
@@ -103,8 +103,8 @@ function ProjectCard({ p, view, unseen }: { p: Project; view: PartnerViewStatus;
         <div>
           <dt>⏰ 締切</dt>
           <dd>
-            {fmtDateTime(p.deadline)}
-            {open && <span className={`remain sm ${r.urgent ? 'urgent' : ''}`}>{r.text}</span>}
+            {fmtDeadline(p.deadline)}
+            {open && !r.invalid && <span className={`remain sm ${r.urgent ? 'urgent' : ''}`}>{r.text}</span>}
           </dd>
         </div>
       </dl>

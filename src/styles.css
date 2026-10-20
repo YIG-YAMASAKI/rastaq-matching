@@ -250,10 +250,15 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--b
 .stat-sky { border-top-color: #0ea5e9; }
 .stat-purple { border-top-color: #7c4ddb; }
 .stat-green { border-top-color: var(--success); }
+.stat-gray { border-top-color: #94a3b8; }
 .stat-label { font-size: 13px; font-weight: 700; color: var(--text-2); }
 .stat-value { font-size: 32px; font-weight: 800; color: var(--navy-700); line-height: 1.2; margin: 4px 0; }
 .stat-value span { font-size: 14px; font-weight: 600; margin-left: 4px; color: var(--muted); }
 .stat-note { font-size: 11.5px; color: var(--muted); }
+.stat-sub { font-size: 12.5px; font-weight: 600; color: var(--text-2); margin: -2px 0 4px; }
+.stat-sub.alert { color: #c62828; }
+.stat-sub span { white-space: nowrap; }
+.stat-sub strong { font-size: 15px; margin: 0 1px; }
 
 .todo-list, .deadline-list { list-style: none; margin: 0; padding: 0; }
 .todo-list li a, .deadline-list li a {
@@ -270,6 +275,7 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--b
 .dl-sub { font-size: 12px; color: var(--muted); }
 .remain { font-size: 12px; font-weight: 700; padding: 2px 10px; border-radius: 999px; background: var(--navy-50); color: var(--navy); white-space: nowrap; }
 .remain.urgent { background: var(--danger-50); color: var(--danger); }
+.remain.muted { background: #eef1f5; color: var(--muted); }
 .remain.sm { font-size: 11px; padding: 0 8px; margin-left: 6px; }
 
 /* テーブル */
@@ -727,6 +733,7 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--b
   .sp-header, .reg-header { padding-top: 12px; }
   .sp-nav { padding-bottom: max(6px, env(safe-area-inset-bottom)); }
   .stats { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat-sub { font-size: 12px; }
   .kpis { grid-template-columns: 1fr 1fr; }
   .page-header h1 { font-size: 18px; }
   .level-options { grid-template-columns: 1fr; }

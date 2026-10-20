@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { AppStatusBadge, Badge, ConfirmDialog, EmptyState, LevelBadge } from '../components/ui';
 import { RASTAQ_OFFICE } from '../data/geo';
 import { levelDef } from '../data/master';
-import { findApp, fmtDateTime, fmtFull, fmtRange, partnerViewStatus, remaining, yen } from '../lib';
+import { findApp, fmtDateTime, fmtDeadline, fmtFull, fmtRange, partnerViewStatus, remaining, yen } from '../lib';
 import { useCurrentPartner, useStore } from '../store/AppStore';
 import { SpSubHeader } from './SpLayout';
 
@@ -79,8 +79,8 @@ export function SpProjectDetail() {
           <div className="sp-kv big">
             <span>回答締め切り</span>
             <strong>
-              {fmtDateTime(project.deadline)}
-              {project.status === '募集中' && <span className={`remain sm ${r.urgent || r.passed ? 'urgent' : ''}`}>{r.text}</span>}
+              {fmtDeadline(project.deadline)}
+              {project.status === '募集中' && !r.invalid && <span className={`remain sm ${r.urgent || r.passed ? 'urgent' : ''}`}>{r.text}</span>}
             </strong>
           </div>
           <div className="sp-kv big">

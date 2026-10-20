@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { EmptyState, LevelBadge, ProjectStatusBadge } from '../components/ui';
 import { WORK_CATEGORIES } from '../data/master';
-import { appliedCount, decidedCount, projectAlerts, fmtDateTime, fmtRange, remaining } from '../lib';
+import { appliedCount, compareDeadline, decidedCount, projectAlerts, fmtDeadline, fmtRange, remaining } from '../lib';
 import { useStore } from '../store/AppStore';
 import type { Project, ProjectStatus } from '../types';
 import { PageHeader } from './AdminLayout';
@@ -98,7 +98,11 @@ export function ProjectList() {
         return true;
       })
       .sort((a, b) =>
-        sort === 'standard' ? standardOrder(a, b) : sort === 'createdAt' ? b.createdAt.localeCompare(a.createdAt) : a[sort].localeCompare(b[sort]),
+        sort === 'standard' ? standardOrder(a, b) : sort === 'createdAt'
+            ? b.createdAt.localeCompare(a.createdAt)
+            : sort === 'deadline'
+              ? compareDeadline(a.deadline, b.deadline)
+              : a[sort].localeCompare(b[sort]),
       );
   }, [state.projects, q, view, statusList.join(), category, sort]);
 
@@ -188,7 +192,7 @@ export function ProjectList() {
                   const n = appliedCount(state, p.id);
                   const d = decidedCount(state, p.id);
                   const r = remaining(p.deadline);
-                  const showRemain = p.status === '募集中';
+                  const showRemain = p.status === '募集中' && !r.invalid; // 締め切りが未設定・不正なら残りは出さない
                   const alerts = projectAlerts(state, p);
                   const top = alerts[0];
                   return (
@@ -219,7 +223,7 @@ export function ProjectList() {
                         {d > 0 && <div className="cell-sub">決定 {d}社</div>}
                       </td>
                       <td className="nowrap">
-                        {fmtDateTime(p.deadline)}
+                        {fmtDeadline(p.deadline)}
                         {showRemain && <div className={`cell-sub ${r.urgent || r.passed ? 'text-danger' : ''}`}>{r.text}</div>}
                       </td>
                       <td>

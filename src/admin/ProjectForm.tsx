@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { DemoNote, Field, GeoStatus, InfoRow, LevelBadge } from '../components/ui';
 import { DEMO_COORDS, RASTAQ_OFFICE, REGIONS, prefectureOf } from '../data/geo';
 import { CATEGORY_WORK_TYPES, DEFAULT_BASE_RATE, LEVELS, MEETING_METHODS, WORK_CATEGORIES, levelDef } from '../data/master';
-import { distanceTarget, fmtFull, fromLocalInput, toLocalInput, yen } from '../lib';
+import { distanceTarget, fmtDeadline, fmtFull, fromLocalInput, toLocalInput, yen } from '../lib';
 import { useStore, type ProjectInput } from '../store/AppStore';
 import type { Level } from '../types';
 import { PageHeader } from './AdminLayout';
@@ -52,7 +52,16 @@ const validate = (f: ProjectInput): Errors => {
   return e;
 };
 
+/**
+ * 新規登録と編集は同じコンポーネントで表示するため、案件ID（新規は 'new'）が変わったら
+ * フォームを作り直す。作り直さないと、前の案件の入力内容・入力段階が残る
+ */
 export function ProjectForm() {
+  const { id } = useParams();
+  return <ProjectFormBody key={id ?? 'new'} />;
+}
+
+function ProjectFormBody() {
   const { id } = useParams();
   const { state, actions } = useStore();
   const navigate = useNavigate();
@@ -131,7 +140,7 @@ export function ProjectForm() {
               {target.kind === 'site' && <GeoStatus address={form.address} />}
             </InfoRow>
             <InfoRow label="交通費">実費支給</InfoRow>
-            <InfoRow label="回答締め切り">{fmtFull(form.deadline)}</InfoRow>
+            <InfoRow label="回答締め切り">{fmtDeadline(form.deadline, fmtFull)}</InfoRow>
             <InfoRow label="単価">
               {form.customRate !== null ? (
                 <>

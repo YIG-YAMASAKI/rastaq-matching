@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { EmptyState, ProjectStatusBadge } from '../components/ui';
-import { appliedCount, decidedCount, fmtDateTime, fmtRange, isPast, remaining, unreadForRastaq } from '../lib';
+import { appliedCount, compareDeadline, decidedCount, fmtDateTime, fmtDeadline, fmtRange, isDeadlineOverdue, isPast, remaining, unreadForRastaq } from '../lib';
 import { useStore } from '../store/AppStore';
 import { PageHeader } from './AdminLayout';
 
@@ -11,11 +11,14 @@ export function Dashboard() {
   const ps = state.projects;
   const recruiting = ps.filter((p) => p.status === '募集中');
   const accepting = recruiting.filter((p) => !isPast(p.deadline));
+  const overdue = recruiting.filter((p) => isDeadlineOverdue(p));
+  const drafts = ps.filter((p) => p.status === '下書き');
   const unassigned = ps.filter((p) => p.status === '応募締め切り' || p.status === '選定中');
   const arranged = ps.filter((p) => p.status === '手配完了' || p.status === '施工中');
 
   const recent = [...ps].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 5);
-  const deadlineSoon = accepting.slice().sort((a, b) => a.deadline.localeCompare(b.deadline));
+  // 締め切りの早い順。締め切りが未設定・不正な案件は末尾
+  const deadlineSoon = accepting.slice().sort((a, b) => compareDeadline(a.deadline, b.deadline));
 
   // ===== 対応が必要な事項 =====
   const todos: Todo[] = [];
@@ -54,9 +57,9 @@ export function Dashboard() {
       todos.push({ key: `rv-${p.id}`, tone: 'orange', label: '登録審査', text: `${p.companyName} から新規登録申請があります`, to: `/admin/reviews/${p.id}`, at: p.registeredAt }),
     );
 
-  const stats = [
-    { label: '募集中の案件', value: recruiting.length, note: 'ステータス「募集中」', to: '/admin/projects?status=募集中', tone: 'blue' },
-    { label: '応募受付中の案件', value: accepting.length, note: '募集中かつ回答締め切り前', to: '/admin/projects?status=募集中', tone: 'sky' },
+  const stats: { label: string; value: number; note: string; to: string; tone: string; overdue?: number }[] = [
+    { label: '募集中の案件', value: recruiting.length, note: 'ステータス「募集中」', to: '/admin/projects?status=募集中', tone: 'blue', overdue: overdue.length },
+    { label: '下書きの案件', value: drafts.length, note: 'ステータス「下書き」', to: '/admin/projects?view=draft', tone: 'gray' },
     { label: '未割り当ての案件', value: unassigned.length, note: '応募締め切り・選定中（人員未確定）', to: '/admin/projects?status=選定待ち', tone: 'purple' },
     { label: '決定済み・施工中', value: arranged.length, note: '手配完了／施工中', to: '/admin/projects?status=手配済み', tone: 'green' },
   ];
@@ -75,6 +78,11 @@ export function Dashboard() {
               {s.value}
               <span>件</span>
             </div>
+            {s.overdue !== undefined && (
+              <div className={`stat-sub${s.overdue > 0 ? ' alert' : ''}`}>
+                内、<span>回答締め切り超過：<strong>{s.overdue}</strong>件</span>
+              </div>
+            )}
             <div className="stat-note">{s.note}</div>
           </Link>
         ))}
@@ -122,10 +130,10 @@ export function Dashboard() {
                       <div className="dl-main">
                         <div className="dl-title">{p.title}</div>
                         <div className="dl-sub">
-                          締切 {fmtDateTime(p.deadline)} ・ 応募 {appliedCount(state, p.id)}社 ／ 必要 {p.requiredCount}名
+                          締切 {fmtDeadline(p.deadline)} ・ 応募 {appliedCount(state, p.id)}社 ／ 必要 {p.requiredCount}名
                         </div>
                       </div>
-                      <span className={`remain ${r.urgent ? 'urgent' : ''}`}>{r.text}</span>
+                      <span className={`remain${r.urgent ? ' urgent' : ''}${r.invalid ? ' muted' : ''}`}>{r.text}</span>
                     </Link>
                   </li>
                 );

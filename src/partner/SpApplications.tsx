@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AppStatusBadge, EmptyState } from '../components/ui';
-import { findApp, fmtDateTime, fmtRange, partnerViewStatus } from '../lib';
+import { findApp, fmtDateTime, fmtDeadline, fmtRange, partnerViewStatus } from '../lib';
 import { useCurrentPartner, useStore } from '../store/AppStore';
 import type { PartnerViewStatus } from '../types';
 import { useVisibleProjects } from './SpLayout';
@@ -62,7 +62,7 @@ export function SpApplications() {
                 </div>
                 <div className="sp-history-title">{p.title}</div>
                 <div className="muted small">
-                  {app && view !== '未回答' ? `${view === '辞退' ? '回答' : '応募'} ${fmtDateTime(app.appliedAt)}` : `締切 ${fmtDateTime(p.deadline)}`}
+                  {app && view !== '未回答' ? `${view === '辞退' ? '回答' : '応募'} ${fmtDateTime(app.appliedAt)}` : `締切 ${fmtDeadline(p.deadline)}`}
                   {app?.resultNotifiedAt && ` ・ 結果通知 ${fmtDateTime(app.resultNotifiedAt)}`}
                 </div>
               </Link>

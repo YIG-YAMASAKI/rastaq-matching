@@ -28,20 +28,44 @@ export const fmtRange = (start: string, end: string) => {
 
 /** <input type="datetime-local"> 用 */
 export const toLocalInput = (iso: string) => {
-  if (!iso) return '';
+  if (timeOf(iso) === null) return ''; // 未設定・不正な日時は空欄にする
   const d = new Date(iso);
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 };
 export const fromLocalInput = (v: string) => (v ? new Date(v).toISOString() : '');
 
-/** 締め切りまでの残り表示 */
-export const remaining = (iso: string) => {
-  const diff = new Date(iso).getTime() - Date.now();
-  if (diff <= 0) return { text: '締切済み', urgent: false, passed: true };
+export const timeOf = (iso: string | null | undefined) => {
+  const t = iso ? new Date(iso).getTime() : NaN;
+  return Number.isNaN(t) ? null : t; // 未設定・不正な日時は判定しない
+};
+
+/** 締め切り日時の問題（未設定・日付として解釈できない）。有効な日時なら null */
+export const deadlineIssue = (iso: string | null | undefined) => (timeOf(iso) !== null ? null : iso ? '日時不正' : '未設定');
+
+/** 締め切り日時の表示。未設定・不正な場合は「未設定」「日時不正」 */
+export const fmtDeadline = (iso: string | null | undefined, fmt: (iso: string) => string = fmtDateTime) => deadlineIssue(iso) ?? fmt(iso as string);
+
+/** 締め切りの早い順。未設定・不正な締め切りは末尾 */
+export const compareDeadline = (a: string | null | undefined, b: string | null | undefined) => {
+  const ta = timeOf(a);
+  const tb = timeOf(b);
+  if (ta === null || tb === null) return ta === tb ? 0 : ta === null ? 1 : -1;
+  return ta - tb;
+};
+
+/**
+ * 締め切りまでの残り表示。
+ * 締め切りが未設定・不正な場合は残りを計算しない（invalid: true）。passed は従来どおり false のまま
+ */
+export const remaining = (iso: string | null | undefined) => {
+  const issue = deadlineIssue(iso);
+  if (issue) return { text: `締切${issue}`, urgent: false, passed: false, invalid: true };
+  const diff = new Date(iso as string).getTime() - Date.now();
+  if (diff <= 0) return { text: '締切済み', urgent: false, passed: true, invalid: false };
   const h = Math.floor(diff / 3600000);
-  if (h < 24) return { text: `残り${h}時間`, urgent: true, passed: false };
+  if (h < 24) return { text: `残り${h}時間`, urgent: true, passed: false, invalid: false };
   const d = Math.floor(h / 24);
-  return { text: `残り${d}日`, urgent: d <= 2, passed: false };
+  return { text: `残り${d}日`, urgent: d <= 2, passed: false, invalid: false };
 };
 
 export const isPast = (iso: string) => new Date(iso).getTime() < Date.now();
@@ -183,9 +207,10 @@ export const START_SOON_DAYS = 3;
 /** 手配（選定結果の確定）が済んでいないステータス */
 const UNARRANGED: Project['status'][] = ['募集中', '応募締め切り', '選定中'];
 
-const timeOf = (iso: string | null | undefined) => {
-  const t = iso ? new Date(iso).getTime() : NaN;
-  return Number.isNaN(t) ? null : t; // 未設定・不正な日時は判定しない
+/** 募集中のまま回答締め切りを過ぎている（締め切りが未設定・不正な案件は false） */
+export const isDeadlineOverdue = (project: Project, now = Date.now()) => {
+  const deadline = timeOf(project.deadline);
+  return project.status === '募集中' && deadline !== null && deadline <= now;
 };
 
 /**
@@ -199,14 +224,13 @@ const timeOf = (iso: string | null | undefined) => {
 export const projectAlerts = (state: AppState, project: Project, now = Date.now()): ProjectAlert[] => {
   if (['下書き', '完了', '中止'].includes(project.status)) return [];
   const out: ProjectAlert[] = [];
-  const deadline = timeOf(project.deadline);
   const start = timeOf(project.startAt);
   const end = timeOf(project.endAt);
   const unarranged = UNARRANGED.includes(project.status);
 
   if (unarranged && start !== null && start <= now)
     out.push({ level: 'danger', label: '作業日超過・未手配', detail: '作業開始日時を過ぎていますが、手配（選定結果の確定）が完了していません' });
-  if (project.status === '募集中' && deadline !== null && deadline <= now)
+  if (isDeadlineOverdue(project, now))
     out.push({ level: 'danger', label: '締め切り超過', detail: '回答締め切りを過ぎていますが、募集中のままです' });
   if (unarranged && start !== null && start > now && start - now <= START_SOON_DAYS * 86400000)
     out.push({ level: 'warn', label: '作業日接近・未手配', detail: `作業開始まで${START_SOON_DAYS}日以内ですが、手配が完了していません` });
